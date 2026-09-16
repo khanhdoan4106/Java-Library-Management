@@ -2,7 +2,7 @@ package main.model;
 
 public class PrintedBook extends Book {
     private int shelfNumber;
-    private boolean available; // chỉ có 1 bản, nên có thể hết để mượn
+    private boolean available; // chỉ có 1 số bản, nên có thể hết để mượn
 
     public PrintedBook(String id, String title, String author, int shelfNumber) {
         super(id, title, author);
