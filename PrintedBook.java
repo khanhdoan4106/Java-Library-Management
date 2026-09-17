@@ -1,8 +1,8 @@
 package main.model;
 
-public class PrintedBook extends Book {
+public class PrintedBook extends Book implements Borrowable {
     private int shelfNumber;
-    private boolean available; // chỉ có 1 số bản, nên có thể hết để mượn
+    private boolean available; // chỉ có 1 bản, nên có thể hết để mượn
 
     public PrintedBook(String id, String title, String author, int shelfNumber) {
         super(id, title, author);
@@ -31,6 +31,7 @@ public class PrintedBook extends Book {
 
     @Override
     public String getInfo() {
-        return super.getInfo() + String.format(" | Shelf: %d", shelfNumber);
+        return super.getInfo() + String.format(" (%s) | Shelf: %d",
+                available ? "Available" : "Borrowed", shelfNumber);
     }
 }
