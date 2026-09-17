@@ -26,14 +26,8 @@ public abstract class Book {
     // Mỗi loại sách có cách tính hạn mượn khác nhau -> thể hiện đa hình
     public abstract int getBorrowDurationInDays();
 
-    // Sách giấy có thể hết bản để mượn, ebook thì không -> để mỗi subclass tự quyết định
-    public abstract boolean isAvailable();
-
-    public abstract void setAvailable(boolean available);
-
     public String getInfo() {
-        return String.format("[%s] %s - %s (%s)",
-                id, title, author, isAvailable() ? "Available" : "Borrowed");
+        return String.format("[%s] %s - %s", id, title, author);
     }
 
     @Override
