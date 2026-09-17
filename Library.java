@@ -1,11 +1,13 @@
 package main.service;
 
 import main.model.Book;
+import main.model.Borrowable;
 import main.model.BorrowRecord;
 import main.model.User;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Library {
@@ -19,23 +21,39 @@ public class Library {
         this.records = new ArrayList<>();
     }
 
-    public void addBook(Book book) {
+    public boolean addBook(Book book) {
+        if (findBookById(book.getId()) != null) {
+            System.out.println("ID sách '" + book.getId() + "' đã tồn tại.");
+            return false;
+        }
         books.add(book);
+        return true;
     }
 
-    public void addUser(User user) {
+    public boolean addUser(User user) {
+        if (findUserById(user.getId()) != null) {
+            System.out.println("ID user '" + user.getId() + "' đã tồn tại.");
+            return false;
+        }
         users.add(user);
+        return true;
     }
 
     public List<Book> getBooks() {
-        return books;
+        return Collections.unmodifiableList(books);
     }
 
     public List<User> getUsers() {
-        return users;
+        return Collections.unmodifiableList(users);
     }
 
     public boolean removeBook(Book book) {
+        boolean currentlyBorrowed = records.stream()
+                .anyMatch(r -> r.getBook().equals(book) && r.getReturnDate() == null);
+        if (currentlyBorrowed) {
+            System.out.println("Không thể xóa '" + book.getTitle() + "' vì đang được mượn.");
+            return false;
+        }
         return books.remove(book);
     }
 
@@ -54,12 +72,15 @@ public class Library {
     }
 
     public boolean borrowBook(User user, Book book) {
-        if (!book.isAvailable()) {
-            System.out.println("'" + book.getTitle() + "' hiện không có sẵn để mượn.");
-            return false;
+        if (book instanceof Borrowable) {
+            Borrowable b = (Borrowable) book;
+            if (!b.isAvailable()) {
+                System.out.println("'" + book.getTitle() + "' hiện không có sẵn để mượn.");
+                return false;
+            }
+            b.setAvailable(false);
         }
         BorrowRecord record = new BorrowRecord(user, book, LocalDate.now());
-        book.setAvailable(false);
         user.addRecord(record);
         records.add(record);
         System.out.println(user.getName() + " đã mượn '" + book.getTitle() + "', hạn trả: " + record.getDueDate());
@@ -70,7 +91,9 @@ public class Library {
         for (BorrowRecord record : records) {
             if (record.getUser().equals(user) && record.getBook().equals(book) && record.getReturnDate() == null) {
                 record.markReturned(LocalDate.now());
-                book.setAvailable(true);
+                if (book instanceof Borrowable) {
+                    ((Borrowable) book).setAvailable(true);
+                }
                 boolean late = record.isOverdue();
                 System.out.println(user.getName() + " đã trả '" + book.getTitle() + "'"
                         + (late ? " (TRỄ HẠN)" : " (đúng hạn)"));
