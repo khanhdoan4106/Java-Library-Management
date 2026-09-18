@@ -38,31 +38,6 @@ LibraryManagement/
 └── .gitignore
 ```
 
-## OOP Concepts Demonstrated
-
-| Concept | Where it's applied |
-|---|---|
-| **Encapsulation** | All model classes expose state only through getters/setters; internal lists in `Library` are returned as unmodifiable collections |
-| **Abstraction** | `Book` is an abstract class defining shared structure without a concrete borrowing policy |
-| **Inheritance** | `PrintedBook` and `Ebook` extend `Book` |
-| **Polymorphism** | Each subclass overrides `getBorrowDurationInDays()` and `getInfo()` with its own behavior |
-| **Interfaces** | `Borrowable` is implemented only by `PrintedBook`, since availability tracking doesn't apply to `Ebook` — a deliberate example of interface segregation |
-| **Composition** | `BorrowRecord` composes a `User`, a `Book`, and loan dates into a single object representing one transaction |
-| **Object equality** | `Book` and `User` override `equals()`/`hashCode()` based on ID, rather than relying on reference equality |
-
-```text
-Book (abstract)
-├── PrintedBook  implements Borrowable   → 14-day loan
-└── Ebook                                → 7-day loan
-
-BorrowRecord
-├── User
-├── Book
-├── borrowDate
-├── dueDate
-└── returnDate
-```
-
 ## Technologies
 
 - Java 17+
@@ -127,10 +102,3 @@ This project was built to practice:
 - Add a graphical interface
 - Add unit tests
 
-## Status
-
-**Learning project** — actively used to practice Java OOP fundamentals. Not intended for production use.
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
