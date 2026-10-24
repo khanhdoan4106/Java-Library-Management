@@ -2,6 +2,12 @@
 
 A console-based **Java application** for managing books, users, and borrowing records — built to practice core **Object-Oriented Programming (OOP)** principles.
 
+## Live Demo
+
+**[Chạy thử trên trình duyệt →](https://khanhdoan4106.github.io/Java-Library-Management/)**
+
+Bản demo web (`docs/index.html`) mô phỏng lại bằng JavaScript đúng các class và quy tắc của bản Java — sách giấy/ebook, mượn/trả, chặn mượn trùng, chặn xoá sách đang mượn, theo dõi quá hạn — kèm nút tua ngày giả lập để xem sách quá hạn mà không phải chờ. Thông báo trong khung log giữ nguyên câu chữ của chương trình console.
+
 ## Overview
 
 This project simulates a small library system where users can borrow and return books, while the system tracks availability, due dates, and overdue records. It is not intended as a production application, but as a hands-on exercise in class design, inheritance, and interfaces in Java.
@@ -21,7 +27,7 @@ This project simulates a small library system where users can borrow and return 
 ## Project Structure
 
 ```text
-LibraryManagement/
+Java-Library-Management/
 ├── src/
 │   └── main/
 │       ├── Main.java
@@ -34,6 +40,8 @@ LibraryManagement/
 │       │   └── BorrowRecord.java
 │       └── service/
 │           └── Library.java
+├── docs/
+│   └── index.html        # Web demo (GitHub Pages)
 ├── README.md
 └── .gitignore
 ```

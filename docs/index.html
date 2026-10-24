@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Management — Demo</title>
+<meta name="description" content="Bản demo trên trình duyệt của dự án Java Library Management: mượn/trả sách, sách giấy và ebook, theo dõi quá hạn.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4efe6;
+    --paper: #fffdf8;
+    --ink: #2b2620;
+    --muted: #7a7064;
+    --line: #e3d9c8;
+    --accent: #8a3b12;
+    --accent-soft: #f6e3d6;
+    --green: #2f7a4d;
+    --green-soft: #e1f1e6;
+    --red: #b3261e;
+    --red-soft: #fbe3e1;
+    --blue: #2d5f9a;
+    --blue-soft: #e2ecf8;
+    --term-bg: #1f1b16;
+    --term-ink: #e9e1d3;
+    --shadow: 0 1px 2px rgba(43,38,32,.06), 0 6px 20px rgba(43,38,32,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17140f;
+      --paper: #211d17;
+      --ink: #eee6d8;
+      --muted: #a89c8b;
+      --line: #3a3329;
+      --accent: #e38a55;
+      --accent-soft: #3b2619;
+      --green: #6fcf94;
+      --green-soft: #1d3326;
+      --red: #f2867f;
+      --red-soft: #3d1f1d;
+      --blue: #8ab6ec;
+      --blue-soft: #1c2a3d;
+      --term-bg: #0f0d0a;
+      --term-ink: #e9e1d3;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body {
+    font-family: "Be Vietnam Pro", system-ui, sans-serif;
+    background: var(--bg); color: var(--ink);
+    font-size: 14px; line-height: 1.5;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+    justify-content: space-between; margin-bottom: 20px;
+  }
+  h1 { font-family: "Lora", Georgia, serif; font-size: 28px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin-top: 2px; }
+  .sub a { color: var(--accent); }
+
+  .clock {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 10px; box-shadow: var(--shadow);
+  }
+  .clock .date { font-weight: 600; padding: 0 6px; }
+  .clock .date small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  button, select, input {
+    font: inherit; color: inherit;
+  }
+  .btn {
+    border: 1px solid var(--line); background: var(--paper);
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 500;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; }
+  .btn.danger { color: var(--red); }
+  .btn.small { padding: 3px 9px; font-size: 12.5px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .card > h2 {
+    font-family: "Lora", Georgia, serif; font-size: 17px;
+    padding: 14px 16px 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .card > h2 .count {
+    font-family: "Be Vietnam Pro", sans-serif; font-size: 12px; font-weight: 600;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 1px 8px;
+  }
+  .card .body { padding: 0 16px 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  input[type=text], select {
+    width: 100%; border: 1px solid var(--line); background: var(--bg);
+    border-radius: 8px; padding: 7px 10px; outline: none;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > .field { flex: 1 1 120px; }
+  .form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .form-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td.id { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  td .title { font-weight: 600; }
+  td .author { color: var(--muted); font-size: 12.5px; }
+  .empty { color: var(--muted); text-align: center; padding: 18px; }
+  td .mtype { display: none; margin-top: 4px; }
+  @media (max-width: 600px) {
+    th.c-type, td.c-type { display: none; }
+    td .mtype { display: inline-block; }
+    th, td { padding-left: 6px; padding-right: 6px; }
+  }
+
+  .badge {
+    display: inline-block; font-size: 11.5px; font-weight: 600;
+    border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+  }
+  .badge.ok { background: var(--green-soft); color: var(--green); }
+  .badge.out { background: var(--red-soft); color: var(--red); }
+  .badge.ebook { background: var(--blue-soft); color: var(--blue); }
+  .badge.type { background: var(--accent-soft); color: var(--accent); }
+
+  .users { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .users li {
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  }
+  .users .uhead { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .users .name { font-weight: 600; }
+  .users .uid { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); }
+  .users .loans { margin-top: 6px; font-size: 12.5px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+  .users .loans .late { color: var(--red); font-weight: 600; }
+
+  .overdue { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .overdue li {
+    border-left: 3px solid var(--red); background: var(--red-soft);
+    border-radius: 8px; padding: 8px 12px; font-size: 13px;
+  }
+  .overdue .days { font-weight: 700; color: var(--red); }
+
+  .hint {
+    font-size: 12.5px; color: var(--muted); background: var(--bg);
+    border-radius: 8px; padding: 8px 10px; margin-top: 10px;
+  }
+  .hint code { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+
+  .term {
+    background: var(--term-bg); color: var(--term-ink);
+    font-family: "JetBrains Mono", monospace; font-size: 12.5px;
+    padding: 12px 14px; height: 230px; overflow-y: auto; line-height: 1.6;
+  }
+  .term .ln { white-space: pre-wrap; word-break: break-word; }
+  .term .d { color: #8f8471; }
+  .term .ok { color: #8fd6a6; }
+  .term .err { color: #f2a39d; }
+  .term .info { color: #e9c58f; }
+  .term-head {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--term-bg); color: #8f8471; padding: 8px 14px 0;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+  }
+  .term-head button { background: none; border: none; color: #8f8471; cursor: pointer; font: inherit; }
+  .term-head button:hover { color: var(--term-ink); }
+
+  footer { margin-top: 24px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Library Management</h1>
+      <p class="sub">Bản demo trên trình duyệt — logic mô phỏng lại các class trong
+        <a href="https://github.com/khanhdoan4106/Java-Library-Management" target="_blank" rel="noopener noreferrer">dự án Java</a>.</p>
+    </div>
+    <div class="clock">
+      <div class="date"><small>Hôm nay (giả lập)</small><span id="today"></span></div>
+      <button class="btn small" data-act="day" data-n="1" title="Tua thêm 1 ngày">+1 ngày</button>
+      <button class="btn small" data-act="day" data-n="7" title="Tua thêm 7 ngày">+7 ngày</button>
+      <button class="btn small ghost" data-act="now" title="Về ngày thật">Về hôm nay</button>
+      <button class="btn small ghost danger" data-act="reset" title="Xoá mọi thay đổi, nạp lại dữ liệu mẫu">Đặt lại</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card">
+        <h2>Sách <span class="count" id="bookCount"></span></h2>
+        <div class="body">
+          <div class="row" style="margin-bottom:10px">
+            <div class="field" style="flex:3 1 200px">
+              <label for="search">Tìm theo tên sách</label>
+              <input type="text" id="search" placeholder="VD: java" autocomplete="off">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Sách</th><th class="c-type">Loại</th><th>Trạng thái</th><th></th></tr></thead>
+              <tbody id="books"></tbody>
+            </table>
+          </div>
+
+          <form class="form" id="bookForm" autocomplete="off">
+            <div class="form-title">Thêm sách</div>
+            <div class="row">
+              <div class="field" style="flex:0 1 150px">
+                <label for="bType">Loại sách</label>
+                <select id="bType">
+                  <option value="printed">Sách giấy</option>
+                  <option value="ebook">Ebook</option>
+                </select>
+              </div>
+              <div class="field" style="flex:0 1 110px">
+                <label for="bId">ID</label>
+                <input type="text" id="bId" placeholder="B005" required>
+              </div>
+              <div class="field">
+                <label for="bTitle">Tên sách</label>
+                <input type="text" id="bTitle" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="bAuthor">Tác giả</label>
+                <input type="text" id="bAuthor" required>
+              </div>
+              <div class="field" id="shelfField" style="flex:0 1 110px">
+                <label for="bShelf">Số kệ</label>
+                <input type="text" id="bShelf" inputmode="numeric" placeholder="1">
+              </div>
+              <div class="field" id="linkField" hidden>
+                <label for="bLink">Link tải</label>
+                <input type="text" id="bLink" placeholder="https://…">
+              </div>
+            </div>
+            <div><button class="btn primary" type="submit">Thêm sách</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="term-head"><span>$ java -cp out main.Main</span><button type="button" data-act="clearlog">xoá log</button></div>
+        <div class="term" id="log" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card">
+        <h2>Mượn / Trả</h2>
+        <div class="body">
+          <div class="row">
+            <div class="field">
+              <label for="lUser">Người mượn</label>
+              <select id="lUser"></select>
+            </div>
+            <div class="field">
+              <label for="lBook">Sách</label>
+              <select id="lBook"></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" data-act="borrow">Mượn sách</button>
+            <button class="btn" data-act="return">Trả sách</button>
+          </div>
+          <p class="hint">Sách giấy mượn <b>14 ngày</b> và chỉ có 1 bản. Ebook mượn <b>7 ngày</b>, luôn có sẵn.
+            Thử mượn rồi bấm <code>+7 ngày</code> để thấy sách quá hạn.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Sách quá hạn <span class="count" id="overdueCount"></span></h2>
+        <div class="body"><ul class="overdue" id="overdue"></ul></div>
+      </section>
+
+      <section class="card">
+        <h2>Thành viên <span class="count" id="userCount"></span></h2>
+        <div class="body">
+          <ul class="users" id="users"></ul>
+          <form class="form" id="userForm" autocomplete="off">
+            <div class="form-title">Thêm thành viên</div>
+            <div class="row">
+              <div class="field" style="flex:0 1 110px">
+                <label for="uId">ID</label>
+                <input type="text" id="uId" placeholder="U003" required>
+              </div>
+              <div class="field">
+                <label for="uName">Tên</label>
+                <input type="text" id="uName" required>
+              </div>
+            </div>
+            <div><button class="btn primary" type="submit">Thêm thành viên</button></div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>Dữ liệu chỉ lưu trong trình duyệt của bạn. Mã nguồn Java:
+    <a href="https://github.com/khanhdoan4106/Java-Library-Management" target="_blank" rel="noopener noreferrer">khanhdoan4106/Java-Library-Management</a>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+ * MODEL — mỗi class tương ứng một file trong src/main/model/*.java
+ * ===================================================================== */
+
+// Ngày dạng "YYYY-MM-DD", tính toán theo UTC để không lệch múi giờ (giống LocalDate).
+const LocalDate = {
+  now() { const d = new Date(); return LocalDate.of(d.getFullYear(), d.getMonth() + 1, d.getDate()); },
+  of(y, m, d) { return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`; },
+  plusDays(iso, n) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const t = new Date(Date.UTC(y, m - 1, d + n));
+    return LocalDate.of(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+  },
+  daysBetween(a, b) {
+    const ms = (iso) => { const [y, m, d] = iso.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+    return Math.round((ms(b) - ms(a)) / 86400000);
+  },
+  isAfter(a, b) { return a > b; },
+  format(iso) { const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; },
+};
+
+class Book {                                   // Book.java (abstract)
+  constructor(id, title, author) { this.id = id; this.title = title; this.author = author; }
+  getBorrowDurationInDays() { throw new Error("abstract"); }
+  getInfo() { return `[${this.id}] ${this.title} - ${this.author}`; }
+  equals(o) { return o instanceof Book && o.id === this.id; }
+}
+
+class PrintedBook extends Book {               // PrintedBook.java — implements Borrowable
+  constructor(id, title, author, shelfNumber, available = true) {
+    super(id, title, author);
+    this.shelfNumber = shelfNumber;
+    this.available = available;
+  }
+  isAvailable() { return this.available; }
+  setAvailable(v) { this.available = v; }
+  getBorrowDurationInDays() { return 14; }
+  getInfo() { return super.getInfo() + ` (${this.available ? "Available" : "Borrowed"}) | Shelf: ${this.shelfNumber}`; }
+}
+
+class Ebook extends Book {                     // Ebook.java
+  constructor(id, title, author, downloadLink) { super(id, title, author); this.downloadLink = downloadLink; }
+  getBorrowDurationInDays() { return 7; }
+  getInfo() { return super.getInfo() + ` (Always available) | Link: ${this.downloadLink}`; }
+}
+
+// Borrowable.java — JS không có interface, kiểm tra theo "hình dạng" thay cho instanceof.
+const isBorrowable = (b) => typeof b.isAvailable === "function" && typeof b.setAvailable === "function";
+
+class User {                                   // User.java
+  constructor(id, name) { this.id = id; this.name = name; this.borrowHistory = []; }
+  addRecord(r) { this.borrowHistory.push(r); }
+  getCurrentlyBorrowedCount() { return this.borrowHistory.filter((r) => r.returnDate === null).length; }
+  equals(o) { return o instanceof User && o.id === this.id; }
+}
+
+class BorrowRecord {                           // BorrowRecord.java
+  constructor(user, book, borrowDate) {
+    this.user = user; this.book = book;
+    this.borrowDate = borrowDate;
+    this.dueDate = LocalDate.plusDays(borrowDate, book.getBorrowDurationInDays());
+    this.returnDate = null;
+  }
+  markReturned(d) { this.returnDate = d; }
+  // Java dùng LocalDate.now(); ở đây truyền "hôm nay" giả lập để có thể tua ngày.
+  isOverdue(today) {
+    const check = this.returnDate !== null ? this.returnDate : today;
+    return LocalDate.isAfter(check, this.dueDate);
+  }
+  toString() {
+    const status = this.returnDate === null ? "Not returned" : "Returned on " + this.returnDate;
+    return `${this.user.name} borrowed '${this.book.title}' on ${this.borrowDate} (due ${this.dueDate}) - ${status}`;
+  }
+}
+
+/* =====================================================================
+ * SERVICE — src/main/service/Library.java
+ * Thông báo in ra giữ nguyên câu chữ của bản Java (System.out.println).
+ * ===================================================================== */
+class Library {
+  constructor(out) { this.books = []; this.users = []; this.records = []; this.today = LocalDate.now(); this.out = out; }
+
+  addBook(book) {
+    if (this.findBookById(book.id)) { this.out(`ID sách '${book.id}' đã tồn tại.`, "err"); return false; }
+    this.books.push(book); return true;
+  }
+  addUser(user) {
+    if (this.findUserById(user.id)) { this.out(`ID user '${user.id}' đã tồn tại.`, "err"); return false; }
+    this.users.push(user); return true;
+  }
+  removeBook(book) {
+    const borrowed = this.records.some((r) => r.book.equals(book) && r.returnDate === null);
+    if (borrowed) { this.out(`Không thể xóa '${book.title}' vì đang được mượn.`, "err"); return false; }
+    this.books = this.books.filter((b) => !b.equals(book)); return true;
+  }
+  findBookById(id) { return this.books.find((b) => b.id === id) || null; }
+  findUserById(id) { return this.users.find((u) => u.id === id) || null; }
+
+  borrowBook(user, book) {
+    if (isBorrowable(book)) {
+      if (!book.isAvailable()) { this.out(`'${book.title}' hiện không có sẵn để mượn.`, "err"); return false; }
+      book.setAvailable(false);
+    }
+    const record = new BorrowRecord(user, book, this.today);
+    user.addRecord(record); this.records.push(record);
+    this.out(`${user.name} đã mượn '${book.title}', hạn trả: ${record.dueDate}`, "ok");
+    return true;
+  }
+  returnBook(user, book) {
+    for (const record of this.records) {
+      if (record.user.equals(user) && record.book.equals(book) && record.returnDate === null) {
+        record.markReturned(this.today);
+        if (isBorrowable(book)) book.setAvailable(true);
+        const late = record.isOverdue(this.today);
+        this.out(`${user.name} đã trả '${book.title}'` + (late ? " (TRỄ HẠN)" : " (đúng hạn)"), late ? "err" : "ok");
+        return true;
+      }
+    }
+    this.out(`${user.name} không có bản ghi mượn sách này.`, "err");
+    return false;
+  }
+  searchByTitle(keyword) {
+    const k = keyword.toLowerCase();
+    return this.books.filter((b) => b.title.toLowerCase().includes(k));
+  }
+  getOverdueRecords() { return this.records.filter((r) => r.returnDate === null && r.isOverdue(this.today)); }
+}
+
+/* =====================================================================
+ * LƯU TRỮ — chuyển object <-> JSON để giữ dữ liệu giữa các lần mở trang
+ * ===================================================================== */
+const STORE = "jlm_demo_v1";
+
+function serialize(lib) {
+  return JSON.stringify({
+    today: lib.today,
+    books: lib.books.map((b) => b instanceof PrintedBook
+      ? { t: "p", id: b.id, title: b.title, author: b.author, shelf: b.shelfNumber, available: b.available }
+      : { t: "e", id: b.id, title: b.title, author: b.author, link: b.downloadLink }),
+    users: lib.users.map((u) => ({ id: u.id, name: u.name })),
+    records: lib.records.map((r) => ({ u: r.user.id, b: r.book.id, bd: r.borrowDate, dd: r.dueDate, rd: r.returnDate })),
+  });
+}
+
+function deserialize(json, lib) {
+  const s = JSON.parse(json);
+  lib.today = s.today;
+  lib.books = s.books.map((b) => b.t === "p"
+    ? new PrintedBook(b.id, b.title, b.author, b.shelf, b.available)
+    : new Ebook(b.id, b.title, b.author, b.link));
+  lib.users = s.users.map((u) => new User(u.id, u.name));
+  // Bản ghi có thể trỏ tới sách đã bị xoá (sau khi trả) — giữ lại bằng bản sao tối giản.
+  const bookOf = (r) => lib.findBookById(r.b) || new Ebook(r.b, "(đã xoá)", "", "");
+  lib.records = s.records.filter((r) => lib.findUserById(r.u)).map((r) => {
+    const rec = new BorrowRecord(lib.findUserById(r.u), bookOf(r), r.bd);
+    rec.dueDate = r.dd; rec.returnDate = r.rd;
+    rec.user.addRecord(rec);
+    return rec;
+  });
+}
+
+function save() { try { localStorage.setItem(STORE, serialize(lib)); } catch (e) { /* chế độ riêng tư: bỏ qua */ } }
+
+function seed(lib) {
+  // Giống seedData() trong Main.java, thêm vài dữ liệu để demo đủ chức năng.
+  lib.today = LocalDate.now();
+  lib.books = []; lib.users = []; lib.records = [];
+  lib.addBook(new PrintedBook("B001", "Clean Code", "Robert C. Martin", 12));
+  lib.addBook(new Ebook("B002", "Effective Java", "Joshua Bloch", "https://example.com/effective-java"));
+  lib.addBook(new PrintedBook("B003", "Design Patterns", "Gang of Four", 5));
+  lib.addBook(new PrintedBook("B004", "Introduction to Algorithms", "Cormen et al.", 7));
+  lib.addBook(new Ebook("B005", "Head First Java", "Kathy Sierra", "https://example.com/head-first-java"));
+  lib.addUser(new User("U001", "Nguyen Van A"));
+  lib.addUser(new User("U002", "Tran Thi B"));
+  // Một lượt mượn đã quá hạn để mục "Sách quá hạn" có dữ liệu ngay từ đầu.
+  const realToday = lib.today;
+  lib.today = LocalDate.plusDays(realToday, -20);
+  const quiet = lib.out; lib.out = () => {};
+  lib.borrowBook(lib.findUserById("U002"), lib.findBookById("B003"));
+  lib.out = quiet;
+  lib.today = realToday;
+}
+
+/* =====================================================================
+ * GIAO DIỆN
+ * ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function log(msg, kind = "") {
+  const el = $("log");
+  const line = document.createElement("div");
+  line.className = "ln";
+  line.innerHTML = `<span class="d">[${LocalDate.format(lib.today)}]</span> <span class="${kind}">${esc(msg)}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+const lib = new Library(log);
+
+function render() {
+  $("today").textContent = LocalDate.format(lib.today);
+
+  // Bảng sách
+  const kw = $("search").value.trim();
+  const list = kw ? lib.searchByTitle(kw) : lib.books;
+  $("bookCount").textContent = lib.books.length;
+  $("books").innerHTML = list.length ? list.map((b) => {
+    const printed = b instanceof PrintedBook;
+    const status = printed
+      ? (b.isAvailable() ? '<span class="badge ok">Còn sách</span>' : '<span class="badge out">Đang mượn</span>')
+      : '<span class="badge ebook">Luôn có sẵn</span>';
+    const type = printed ? `Sách giấy · kệ ${esc(b.shelfNumber)}` : "Ebook";
+    return `<tr>
+      <td class="id">${esc(b.id)}</td>
+      <td><div class="title">${esc(b.title)}</div><div class="author">${esc(b.author)}</div><span class="badge type mtype">${type}</span></td>
+      <td class="c-type"><span class="badge type">${type}</span></td>
+      <td>${status}</td>
+      <td><button class="btn small ghost danger" data-act="remove" data-id="${esc(b.id)}" title="Xoá sách">Xoá</button></td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="5" class="empty">${kw ? "Không tìm thấy sách nào." : "Chưa có sách."}</td></tr>`;
+
+  // Ô chọn mượn/trả — giữ lựa chọn hiện tại khi vẽ lại
+  const keepU = $("lUser").value, keepB = $("lBook").value;
+  $("lUser").innerHTML = lib.users.map((u) => `<option value="${esc(u.id)}">${esc(u.id)} — ${esc(u.name)}</option>`).join("");
+  $("lBook").innerHTML = lib.books.map((b) => {
+    const tag = b instanceof PrintedBook ? (b.isAvailable() ? "" : " (đang mượn)") : " (ebook)";
+    return `<option value="${esc(b.id)}">${esc(b.id)} — ${esc(b.title)}${tag}</option>`;
+  }).join("");
+  if (lib.findUserById(keepU)) $("lUser").value = keepU;
+  if (lib.findBookById(keepB)) $("lBook").value = keepB;
+
+  // Thành viên
+  $("userCount").textContent = lib.users.length;
+  $("users").innerHTML = lib.users.map((u) => {
+    const open = u.borrowHistory.filter((r) => r.returnDate === null);
+    const loans = open.map((r) => {
+      const late = r.isOverdue(lib.today);
+      return `<span class="${late ? "late" : ""}">• ${esc(r.book.title)} — hạn ${LocalDate.format(r.dueDate)}${late ? " (quá hạn)" : ""}</span>`;
+    }).join("");
+    return `<li>
+      <div class="uhead"><span><span class="name">${esc(u.name)}</span> <span class="uid">${esc(u.id)}</span></span>
+        <span class="badge ${open.length ? "type" : "ok"}">Đang mượn: ${u.getCurrentlyBorrowedCount()}</span></div>
+      ${loans ? `<div class="loans">${loans}</div>` : ""}
+    </li>`;
+  }).join("") || '<li class="empty">Chưa có thành viên.</li>';
+
+  // Quá hạn
+  const od = lib.getOverdueRecords();
+  $("overdueCount").textContent = od.length;
+  $("overdue").innerHTML = od.length ? od.map((r) => {
+    const days = LocalDate.daysBetween(r.dueDate, lib.today);
+    return `<li><b>${esc(r.user.name)}</b> mượn <b>${esc(r.book.title)}</b><br>
+      Hạn trả ${LocalDate.format(r.dueDate)} · <span class="days">trễ ${days} ngày</span></li>`;
+  }).join("") : '<li style="border-left-color:var(--green);background:var(--green-soft)">Không có sách quá hạn.</li>';
+
+  save();
+}
+
+// Ẩn/hiện trường "Số kệ" hoặc "Link tải" theo loại sách
+$("bType").addEventListener("change", (e) => {
+  const printed = e.target.value === "printed";
+  $("shelfField").hidden = !printed;
+  $("linkField").hidden = printed;
+});
+
+$("search").addEventListener("input", render);
+
+$("bookForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = $("bId").value.trim(), title = $("bTitle").value.trim(), author = $("bAuthor").value.trim();
+  if (!id || !title || !author) return;
+  let book;
+  if ($("bType").value === "printed") {
+    const shelf = Number($("bShelf").value.trim());
+    if (!Number.isInteger(shelf) || shelf < 0) { log("Vui lòng nhập số kệ là số nguyên.", "err"); $("bShelf").focus(); return; }
+    book = new PrintedBook(id, title, author, shelf);
+  } else {
+    book = new Ebook(id, title, author, $("bLink").value.trim() || "(chưa có link)");
+  }
+  if (lib.addBook(book)) { log("Đã thêm sách: " + book.getInfo(), "ok"); e.target.reset(); $("bType").dispatchEvent(new Event("change")); }
+  render();
+});
+
+$("userForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = $("uId").value.trim(), name = $("uName").value.trim();
+  if (!id || !name) return;
+  if (lib.addUser(new User(id, name))) { log(`Đã thêm user: ${id} - ${name}`, "ok"); e.target.reset(); }
+  render();
+});
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+  const act = btn.dataset.act;
+  const user = lib.findUserById($("lUser").value);
+  const book = lib.findBookById($("lBook").value);
+
+  if (act === "borrow" || act === "return") {
+    if (!user || !book) { log("Không tìm thấy user hoặc sách.", "err"); return; }
+    act === "borrow" ? lib.borrowBook(user, book) : lib.returnBook(user, book);
+  } else if (act === "remove") {
+    const b = lib.findBookById(btn.dataset.id);
+    if (b && lib.removeBook(b)) log(`Đã xóa sách '${b.title}'.`, "ok");
+  } else if (act === "day") {
+    const n = Number(btn.dataset.n);
+    lib.today = LocalDate.plusDays(lib.today, n);
+    log(`Tua thời gian +${n} ngày.`, "info");
+  } else if (act === "now") {
+    lib.today = LocalDate.now();
+    log("Đặt lại về ngày hôm nay.", "info");
+  } else if (act === "reset") {
+    if (!confirm("Xoá mọi thay đổi và nạp lại dữ liệu mẫu?")) return;
+    seed(lib); $("log").innerHTML = "";
+    log("Đã nạp lại dữ liệu mẫu.", "info");
+  } else if (act === "clearlog") {
+    $("log").innerHTML = ""; return;
+  }
+  render();
+});
+
+// Khởi động
+let loaded = false;
+try { const raw = localStorage.getItem(STORE); if (raw) { deserialize(raw, lib); loaded = true; } } catch (e) { loaded = false; }
+if (!loaded) seed(lib);
+log(loaded ? "Đã khôi phục dữ liệu từ lần trước." : "===== LIBRARY MANAGEMENT ===== Đã nạp dữ liệu mẫu.", "info");
+render();
+</script>
+</body>
+</html>

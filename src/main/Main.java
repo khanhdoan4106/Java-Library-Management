@@ -65,13 +65,16 @@ public class Main {
         if (type == 1) {
             System.out.print("Số kệ: ");
             int shelf = readInt("");
-            library.addBook(new PrintedBook(id, title, author, shelf));
+            if (library.addBook(new PrintedBook(id, title, author, shelf))) {
+                System.out.println("Đã thêm sách.");
+            }
         } else {
             System.out.print("Link tải: ");
             String link = scanner.nextLine();
-            library.addBook(new Ebook(id, title, author, link));
+            if (library.addBook(new Ebook(id, title, author, link))) {
+                System.out.println("Đã thêm sách.");
+            }
         }
-        System.out.println("Đã thêm sách.");
     }
 
     private static void removeBook() {
@@ -82,8 +85,9 @@ public class Main {
             System.out.println("Không tìm thấy sách.");
             return;
         }
-        library.removeBook(book);
-        System.out.println("Đã xóa sách.");
+        if (library.removeBook(book)) {
+            System.out.println("Đã xóa sách.");
+        }
     }
 
     private static void searchBook() {
@@ -102,8 +106,9 @@ public class Main {
         String id = scanner.nextLine();
         System.out.print("Tên: ");
         String name = scanner.nextLine();
-        library.addUser(new User(id, name));
-        System.out.println("Đã thêm user.");
+        if (library.addUser(new User(id, name))) {
+            System.out.println("Đã thêm user.");
+        }
     }
 
     private static void showUsers() {
