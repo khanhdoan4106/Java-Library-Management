@@ -3,233 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Library Management — Demo</title>
+<title>Quản lý thư viện</title>
 <meta name="description" content="Bản demo trên trình duyệt của dự án Java Library Management: mượn/trả sách, sách giấy và ebook, theo dõi quá hạn.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* Vật dụng thư viện: thẻ mục lục kẻ xanh có vạch đỏ, mực dấu tím, nhãn số hiệu gáy sách.
+     Điểm nhấn duy nhất là phiếu mượn (lịch sử BorrowRecord) với ngày đóng dấu. */
   :root {
-    --bg: #f4efe6;
-    --paper: #fffdf8;
-    --ink: #2b2620;
-    --muted: #7a7064;
-    --line: #e3d9c8;
-    --accent: #8a3b12;
-    --accent-soft: #f6e3d6;
-    --green: #2f7a4d;
-    --green-soft: #e1f1e6;
-    --red: #b3261e;
-    --red-soft: #fbe3e1;
-    --blue: #2d5f9a;
-    --blue-soft: #e2ecf8;
-    --term-bg: #1f1b16;
-    --term-ink: #e9e1d3;
-    --shadow: 0 1px 2px rgba(43,38,32,.06), 0 6px 20px rgba(43,38,32,.06);
+    --page: #eef1f4;
+    --paper: #ffffff;
+    --ink: #1a2230;
+    --muted: #5a6472;
+    --rule: #dfe3e8;
+    --field: #f6f7f9;
+    --card-line: #cfe0f2;   /* dòng kẻ thẻ mục lục */
+    --card-top: #e05a5a;    /* vạch đỏ đầu thẻ */
+    --stamp: #5b3ea6;       /* mực dấu tím */
+    --late: #c42b2b;
+    --term: #1a2230;
+    --term-ink: #dfe5ee;
+    --ui: "Source Sans 3", system-ui, sans-serif;
+    --type: "Courier Prime", ui-monospace, monospace;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17140f;
-      --paper: #211d17;
-      --ink: #eee6d8;
-      --muted: #a89c8b;
-      --line: #3a3329;
-      --accent: #e38a55;
-      --accent-soft: #3b2619;
-      --green: #6fcf94;
-      --green-soft: #1d3326;
-      --red: #f2867f;
-      --red-soft: #3d1f1d;
-      --blue: #8ab6ec;
-      --blue-soft: #1c2a3d;
-      --term-bg: #0f0d0a;
-      --term-ink: #e9e1d3;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    :root:not([data-theme="light"]) {
+      --page: #12161c;
+      --paper: #1b2028;
+      --ink: #e6eaf0;
+      --muted: #98a2b0;
+      --rule: #2c333d;
+      --field: #232a33;
+      --card-line: #283a52;
+      --card-top: #b34848;
+      --stamp: #b39cf0;
+      --late: #ff7b72;
+      --term: #0c0f13;
     }
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   [hidden] { display: none !important; }
-  body {
-    font-family: "Be Vietnam Pro", system-ui, sans-serif;
-    background: var(--bg); color: var(--ink);
-    font-size: 14px; line-height: 1.5;
-  }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  body { font-family: var(--ui); background: var(--page); color: var(--ink); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 32px 24px 48px; }
 
-  header.top {
-    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
-    justify-content: space-between; margin-bottom: 20px;
-  }
-  h1 { font-family: "Lora", Georgia, serif; font-size: 28px; letter-spacing: -.01em; }
-  .sub { color: var(--muted); margin-top: 2px; }
-  .sub a { color: var(--accent); }
+  /* ---------------------------------------------------------- đầu trang */
+  .top { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+  .sub { color: var(--muted); margin-top: 4px; max-width: 36em; }
+  .sub code { font-family: var(--type); font-size: 0.95em; }
+  .sub a, footer a { color: inherit; text-underline-offset: 3px; }
 
-  .clock {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
-    padding: 8px 10px; box-shadow: var(--shadow);
-  }
-  .clock .date { font-weight: 600; padding: 0 6px; }
-  .clock .date small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .clock { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .clock .label { font-size: 14px; color: var(--muted); line-height: 1.2; }
+  .clock-btns { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  button, select, input {
-    font: inherit; color: inherit;
-  }
-  .btn {
-    border: 1px solid var(--line); background: var(--paper);
-    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 500;
-    transition: background .15s, border-color .15s;
-  }
-  .btn:hover { border-color: var(--muted); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { filter: brightness(1.08); }
-  .btn.ghost { background: transparent; }
-  .btn.danger { color: var(--red); }
-  .btn.small { padding: 3px 9px; font-size: 12.5px; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
-
-  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; align-items: start; }
-  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-
-  .card {
-    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-    box-shadow: var(--shadow); overflow: hidden;
-  }
-  .card > h2 {
-    font-family: "Lora", Georgia, serif; font-size: 17px;
-    padding: 14px 16px 10px; display: flex; align-items: center; gap: 8px;
-  }
-  .card > h2 .count {
-    font-family: "Be Vietnam Pro", sans-serif; font-size: 12px; font-weight: 600;
-    background: var(--accent-soft); color: var(--accent);
-    border-radius: 999px; padding: 1px 8px;
-  }
-  .card .body { padding: 0 16px 16px; }
-
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
-  input[type=text], select {
-    width: 100%; border: 1px solid var(--line); background: var(--bg);
-    border-radius: 8px; padding: 7px 10px; outline: none;
-  }
-  input[type=text]:focus, select:focus { border-color: var(--accent); }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .row > .field { flex: 1 1 120px; }
-  .form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
-  .form-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line);
+  /* Con dấu ngày: viền đôi, mực tím, nghiêng nhẹ như dấu cao su */
+  .stamp {
+    display: inline-block;
+    font-family: var(--type);
+    font-weight: 700;
+    color: var(--stamp);
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    padding: 1px 7px;
+    line-height: 1.3;
+    transform: rotate(-2deg);
+    box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3px currentColor;
     white-space: nowrap;
   }
-  td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  td.id { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
-  td .title { font-weight: 600; }
-  td .author { color: var(--muted); font-size: 12.5px; }
-  .empty { color: var(--muted); text-align: center; padding: 18px; }
-  td .mtype { display: none; margin-top: 4px; }
-  @media (max-width: 600px) {
-    th.c-type, td.c-type { display: none; }
-    td .mtype { display: inline-block; }
-    th, td { padding-left: 6px; padding-right: 6px; }
+  .stamp.big { font-size: 22px; padding: 3px 12px; }
+  .stamp.late { color: var(--late); transform: rotate(1.5deg); }
+  .stamp.plain { box-shadow: none; }
+
+  /* ---------------------------------------------------------- nút, ô nhập */
+  .btn {
+    height: 36px; padding: 0 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--rule); background: var(--paper);
+    font-size: 15px; font-weight: 600; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--ink); }
+  .btn.ink { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .btn.ink:hover { opacity: 0.9; }
+  .btn.small { height: 32px; padding: 0 11px; font-size: 14px; }
+  .btn.danger { color: var(--late); }
+  .btn.danger.armed { background: var(--late); border-color: var(--late); color: #fff; }
+  .icon-btn {
+    width: 32px; height: 32px; border: 0; border-radius: 6px; background: none; cursor: pointer;
+    color: var(--muted); display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { color: var(--late); background: var(--field); }
+
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; min-width: 0; }
+  .field label { font-size: 14px; font-weight: 600; color: var(--muted); }
+  input[type=text], input[type=search], select {
+    width: 100%; height: 38px; border: 1px solid var(--rule); background: var(--field);
+    border-radius: 6px; padding: 0 10px; outline: none;
+  }
+  input:hover, select:hover { border-color: #b7bfc9; }
+  input:focus, select:focus { border-color: var(--ink); background: var(--paper); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+
+  /* ---------------------------------------------------------- bố cục */
+  .grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 0 40px; align-items: start; }
+  @media (max-width: 920px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  section { padding: 24px 0; border-top: 1px solid var(--rule); }
+  .col > section:first-child { padding-top: 0; border-top: 0; }
+  @media (max-width: 920px) { .col + .col > section:first-child { padding-top: 24px; border-top: 1px solid var(--rule); } }
+  h2 { font-size: 20px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  h2 .count { font-size: 15px; font-weight: 500; color: var(--muted); }
+  h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+
+  /* ---------------------------------------------------------- danh sách sách */
+  .books { list-style: none; }
+  .book {
+    display: grid; grid-template-columns: 64px minmax(0, 1fr) auto 32px; gap: 14px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--rule);
+  }
+  .book:first-child { border-top: 1px solid var(--rule); }
+  /* Nhãn số hiệu dán gáy sách */
+  .callno {
+    justify-self: start;
+    font-family: var(--type); font-weight: 700; font-size: 15px;
+    background: var(--paper); border: 1.5px solid var(--ink); border-radius: 3px;
+    padding: 2px 6px; line-height: 1.2;
+  }
+  .book .title { font-weight: 600; }
+  .book .meta { font-size: 14.5px; color: var(--muted); }
+  .status { font-size: 14.5px; text-align: right; white-space: nowrap; }
+  .status.out { color: var(--stamp); font-weight: 600; }
+  .status.ok { color: var(--muted); }
+  .empty { color: var(--muted); padding: 14px 0; }
+  @media (max-width: 560px) {
+    .book { grid-template-columns: 56px minmax(0, 1fr) 32px; }
+    .book .status { grid-column: 2; grid-row: 2; text-align: left; margin-top: -8px; }
+    .book .icon-btn { grid-column: 3; grid-row: 1; }
   }
 
-  .badge {
-    display: inline-block; font-size: 11.5px; font-weight: 600;
-    border-radius: 999px; padding: 2px 9px; white-space: nowrap;
-  }
-  .badge.ok { background: var(--green-soft); color: var(--green); }
-  .badge.out { background: var(--red-soft); color: var(--red); }
-  .badge.ebook { background: var(--blue-soft); color: var(--blue); }
-  .badge.type { background: var(--accent-soft); color: var(--accent); }
+  details.add { margin-top: 16px; }
+  details.add summary { cursor: pointer; font-weight: 600; width: max-content; list-style: none; }
+  details.add summary::-webkit-details-marker { display: none; }
+  details.add summary::before { content: "+ "; color: var(--muted); }
+  details.add[open] summary::before { content: "− "; }
+  details.add summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .form { display: grid; gap: 12px; margin-top: 12px; padding: 16px; background: var(--field); border-radius: 6px; }
+  .form input[type=text], .form select { background: var(--paper); }
 
-  .users { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-  .users li {
-    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  /* ---------------------------------------------------------- phiếu mượn (điểm nhấn) */
+  .slip {
+    background: var(--paper);
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(26, 34, 48, 0.08), 0 8px 24px rgba(26, 34, 48, 0.08);
+    padding: 14px 18px 8px;
+    border-top: 3px solid var(--card-top);
   }
-  .users .uhead { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-  .users .name { font-weight: 600; }
-  .users .uid { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); }
-  .users .loans { margin-top: 6px; font-size: 12.5px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
-  .users .loans .late { color: var(--red); font-weight: 600; }
+  .slip-head { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--muted); padding-bottom: 6px; border-bottom: 1.5px solid var(--card-top); }
+  .slip ol { list-style: none; max-height: 480px; overflow-y: auto; }
+  .slip li { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px; gap: 4px 8px; align-items: center; min-height: 48px; padding: 6px 0; border-bottom: 1px solid var(--card-line); }
+  .slip li:last-child { border-bottom: 0; }
+  .slip .who { min-width: 0; line-height: 1.3; }
+  .slip .who b { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slip .who span { font-size: 14px; color: var(--muted); }
+  .slip .date { font-family: var(--type); font-weight: 700; font-size: 14.5px; color: var(--stamp); }
+  .slip .note { grid-column: 1 / -1; }
+  .slip .returned .date, .slip .returned .who b { opacity: 0.55; }
+  /* Dấu có chữ tiếng Việt: Courier Prime thiếu dấu nên dùng font giao diện, giữ màu và viền con dấu */
+  .slip .stamp { font-family: var(--ui); font-size: 13.5px; letter-spacing: 0.01em; }
+  .slip-empty { color: var(--muted); padding: 14px 0; }
 
-  .overdue { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-  .overdue li {
-    border-left: 3px solid var(--red); background: var(--red-soft);
-    border-radius: 8px; padding: 8px 12px; font-size: 13px;
-  }
-  .overdue .days { font-weight: 700; color: var(--red); }
+  .hint { font-size: 14.5px; color: var(--muted); margin-top: 12px; max-width: 34em; }
+  .hint b { color: var(--ink); font-weight: 600; }
 
-  .hint {
-    font-size: 12.5px; color: var(--muted); background: var(--bg);
-    border-radius: 8px; padding: 8px 10px; margin-top: 10px;
-  }
-  .hint code { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+  /* ---------------------------------------------------------- thành viên */
+  .users { list-style: none; }
+  .users li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .users li:first-child { border-top: 1px solid var(--rule); }
+  .uhead { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .uhead .name { font-weight: 600; }
+  .uhead .uid { font-family: var(--type); font-size: 14px; color: var(--muted); margin-left: 6px; }
+  .uhead .n { font-size: 14.5px; color: var(--muted); white-space: nowrap; }
+  .loans { font-size: 14.5px; color: var(--muted); margin-top: 2px; }
+  .loans .late { color: var(--late); font-weight: 600; }
 
-  .term {
-    background: var(--term-bg); color: var(--term-ink);
-    font-family: "JetBrains Mono", monospace; font-size: 12.5px;
-    padding: 12px 14px; height: 230px; overflow-y: auto; line-height: 1.6;
-  }
+  /* ---------------------------------------------------------- console */
+  .console { margin-top: 8px; border-radius: 6px; overflow: hidden; background: var(--term); }
+  .console-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: #8a96a8; }
+  .console-head button { background: none; border: 0; color: #8a96a8; cursor: pointer; font-size: 13px; }
+  .console-head button:hover { color: var(--term-ink); text-decoration: underline; }
+  .term { color: var(--term-ink); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.65; padding: 8px 14px 12px; height: 200px; overflow-y: auto; }
   .term .ln { white-space: pre-wrap; word-break: break-word; }
-  .term .d { color: #8f8471; }
-  .term .ok { color: #8fd6a6; }
-  .term .err { color: #f2a39d; }
-  .term .info { color: #e9c58f; }
-  .term-head {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--term-bg); color: #8f8471; padding: 8px 14px 0;
-    font-family: "JetBrains Mono", monospace; font-size: 12px;
-  }
-  .term-head button { background: none; border: none; color: #8f8471; cursor: pointer; font: inherit; }
-  .term-head button:hover { color: var(--term-ink); }
+  .term .d { color: #6f7b8d; }
+  .term .ok { color: #9fd8b0; }
+  .term .err { color: #ffa198; }
+  .term .info { color: #c9b8ff; }
 
-  footer { margin-top: 24px; color: var(--muted); font-size: 12.5px; text-align: center; }
-  footer a { color: var(--accent); }
+  footer { margin-top: 32px; color: var(--muted); font-size: 14.5px; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 20px 16px 40px; }
+    h1 { font-size: 26px; }
+    .slip { padding: 12px 12px 6px; }
+    .slip-head, .slip li { grid-template-columns: minmax(0, 1fr) 84px 84px; gap: 6px; }
+    .slip .date { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Library Management</h1>
-      <p class="sub">Bản demo trên trình duyệt — logic mô phỏng lại các class trong
-        <a href="https://github.com/khanhdoan4106/Java-Library-Management" target="_blank" rel="noopener noreferrer">dự án Java</a>.</p>
+      <h1>Quản lý thư viện</h1>
+      <p class="sub">Bản chạy trên trình duyệt của <a href="https://github.com/khanhdoan4106/Java-Library-Management" target="_blank" rel="noopener noreferrer">dự án Java</a>.
+        Các class <code>Book</code>, <code>PrintedBook</code>, <code>Ebook</code>, <code>Library</code> được viết lại bằng JavaScript với đúng quy tắc mượn trả.</p>
     </div>
     <div class="clock">
-      <div class="date"><small>Hôm nay (giả lập)</small><span id="today"></span></div>
-      <button class="btn small" data-act="day" data-n="1" title="Tua thêm 1 ngày">+1 ngày</button>
-      <button class="btn small" data-act="day" data-n="7" title="Tua thêm 7 ngày">+7 ngày</button>
-      <button class="btn small ghost" data-act="now" title="Về ngày thật">Về hôm nay</button>
-      <button class="btn small ghost danger" data-act="reset" title="Xoá mọi thay đổi, nạp lại dữ liệu mẫu">Đặt lại</button>
+      <div class="label">Hôm nay<br>(giả lập)</div>
+      <span class="stamp big" id="today"></span>
+      <div class="clock-btns">
+        <button class="btn small" data-act="day" data-n="1">+1 ngày</button>
+        <button class="btn small" data-act="day" data-n="7">+7 ngày</button>
+        <button class="btn small" data-act="now">Về hôm nay</button>
+        <button class="btn small danger" data-act="reset" id="resetBtn">Đặt lại dữ liệu</button>
+      </div>
     </div>
   </header>
 
   <div class="grid">
     <div class="col">
-      <section class="card">
+      <section>
         <h2>Sách <span class="count" id="bookCount"></span></h2>
-        <div class="body">
-          <div class="row" style="margin-bottom:10px">
-            <div class="field" style="flex:3 1 200px">
-              <label for="search">Tìm theo tên sách</label>
-              <input type="text" id="search" placeholder="VD: java" autocomplete="off">
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>ID</th><th>Sách</th><th class="c-type">Loại</th><th>Trạng thái</th><th></th></tr></thead>
-              <tbody id="books"></tbody>
-            </table>
-          </div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="search">Tìm theo tên sách</label>
+          <input type="search" id="search" placeholder="java" autocomplete="off">
+        </div>
+        <ul class="books" id="books"></ul>
 
+        <details class="add">
+          <summary>Thêm sách</summary>
           <form class="form" id="bookForm" autocomplete="off">
-            <div class="form-title">Thêm sách</div>
             <div class="row">
               <div class="field" style="flex:0 1 150px">
                 <label for="bType">Loại sách</label>
@@ -239,8 +253,8 @@
                 </select>
               </div>
               <div class="field" style="flex:0 1 110px">
-                <label for="bId">ID</label>
-                <input type="text" id="bId" placeholder="B005" required>
+                <label for="bId">Mã sách</label>
+                <input type="text" id="bId" placeholder="B006" required>
               </div>
               <div class="field">
                 <label for="bTitle">Tên sách</label>
@@ -258,67 +272,71 @@
               </div>
               <div class="field" id="linkField" hidden>
                 <label for="bLink">Link tải</label>
-                <input type="text" id="bLink" placeholder="https://…">
+                <input type="text" id="bLink" placeholder="https://">
               </div>
             </div>
-            <div><button class="btn primary" type="submit">Thêm sách</button></div>
+            <div><button class="btn ink" type="submit">Thêm sách</button></div>
           </form>
-        </div>
+        </details>
       </section>
 
-      <section class="card">
-        <div class="term-head"><span>$ java -cp out main.Main</span><button type="button" data-act="clearlog">xoá log</button></div>
-        <div class="term" id="log" aria-live="polite"></div>
+      <section>
+        <h2>Console</h2>
+        <div class="console">
+          <div class="console-head"><span>$ java -cp out main.Main</span><button type="button" data-act="clearlog">Xoá log</button></div>
+          <div class="term" id="log" aria-live="polite"></div>
+        </div>
       </section>
     </div>
 
     <div class="col">
-      <section class="card">
-        <h2>Mượn / Trả</h2>
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label for="lUser">Người mượn</label>
-              <select id="lUser"></select>
-            </div>
-            <div class="field">
-              <label for="lBook">Sách</label>
-              <select id="lBook"></select>
-            </div>
+      <section>
+        <h2>Mượn và trả</h2>
+        <div class="row">
+          <div class="field">
+            <label for="lUser">Người mượn</label>
+            <select id="lUser"></select>
           </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn primary" data-act="borrow">Mượn sách</button>
-            <button class="btn" data-act="return">Trả sách</button>
+          <div class="field">
+            <label for="lBook">Sách</label>
+            <select id="lBook"></select>
           </div>
-          <p class="hint">Sách giấy mượn <b>14 ngày</b> và chỉ có 1 bản. Ebook mượn <b>7 ngày</b>, luôn có sẵn.
-            Thử mượn rồi bấm <code>+7 ngày</code> để thấy sách quá hạn.</p>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn ink" data-act="borrow">Mượn sách</button>
+          <button class="btn" data-act="return">Trả sách</button>
+        </div>
+        <p class="hint">Sách giấy mượn <b>14 ngày</b> và chỉ có 1 bản. Ebook mượn <b>7 ngày</b> và luôn có sẵn.
+          Mượn thử một cuốn rồi bấm +7 ngày hai lần để thấy dấu quá hạn.</p>
+      </section>
+
+      <section>
+        <h2>Phiếu mượn <span class="count" id="slipCount"></span></h2>
+        <div class="slip">
+          <div class="slip-head"><span>Người mượn, sách</span><span>Ngày mượn</span><span>Hạn trả</span></div>
+          <ol id="slip"></ol>
         </div>
       </section>
 
-      <section class="card">
-        <h2>Sách quá hạn <span class="count" id="overdueCount"></span></h2>
-        <div class="body"><ul class="overdue" id="overdue"></ul></div>
-      </section>
-
-      <section class="card">
+      <section>
         <h2>Thành viên <span class="count" id="userCount"></span></h2>
-        <div class="body">
-          <ul class="users" id="users"></ul>
+        <ul class="users" id="users"></ul>
+        <details class="add">
+          <summary>Thêm thành viên</summary>
           <form class="form" id="userForm" autocomplete="off">
-            <div class="form-title">Thêm thành viên</div>
             <div class="row">
               <div class="field" style="flex:0 1 110px">
-                <label for="uId">ID</label>
+                <label for="uId">Mã</label>
                 <input type="text" id="uId" placeholder="U003" required>
               </div>
               <div class="field">
-                <label for="uName">Tên</label>
+                <label for="uName">Họ tên</label>
                 <input type="text" id="uName" required>
               </div>
             </div>
-            <div><button class="btn primary" type="submit">Thêm thành viên</button></div>
+            <div><button class="btn ink" type="submit">Thêm thành viên</button></div>
           </form>
-        </div>
+        </details>
       </section>
     </div>
   </div>
@@ -517,6 +535,7 @@ function seed(lib) {
  * ===================================================================== */
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shortDate = (iso) => { const [y, m, d] = iso.split("-"); return `${d}/${m}/${y.slice(2)}`; };
 
 function log(msg, kind = "") {
   const el = $("log");
@@ -529,62 +548,82 @@ function log(msg, kind = "") {
 
 const lib = new Library(log);
 
-function render() {
-  $("today").textContent = LocalDate.format(lib.today);
-
-  // Bảng sách
+function renderBooks() {
   const kw = $("search").value.trim();
   const list = kw ? lib.searchByTitle(kw) : lib.books;
-  $("bookCount").textContent = lib.books.length;
+  $("bookCount").textContent = `${lib.books.length} cuốn`;
   $("books").innerHTML = list.length ? list.map((b) => {
     const printed = b instanceof PrintedBook;
     const status = printed
-      ? (b.isAvailable() ? '<span class="badge ok">Còn sách</span>' : '<span class="badge out">Đang mượn</span>')
-      : '<span class="badge ebook">Luôn có sẵn</span>';
-    const type = printed ? `Sách giấy · kệ ${esc(b.shelfNumber)}` : "Ebook";
-    return `<tr>
-      <td class="id">${esc(b.id)}</td>
-      <td><div class="title">${esc(b.title)}</div><div class="author">${esc(b.author)}</div><span class="badge type mtype">${type}</span></td>
-      <td class="c-type"><span class="badge type">${type}</span></td>
-      <td>${status}</td>
-      <td><button class="btn small ghost danger" data-act="remove" data-id="${esc(b.id)}" title="Xoá sách">Xoá</button></td>
-    </tr>`;
-  }).join("") : `<tr><td colspan="5" class="empty">${kw ? "Không tìm thấy sách nào." : "Chưa có sách."}</td></tr>`;
+      ? (b.isAvailable()
+          ? `<span class="status ok">Trên kệ ${esc(b.shelfNumber)}</span>`
+          : `<span class="status out">Đang cho mượn</span>`)
+      : `<span class="status ok">Ebook, luôn có sẵn</span>`;
+    return `<li class="book">
+      <span class="callno">${esc(b.id)}</span>
+      <div><div class="title">${esc(b.title)}</div><div class="meta">${esc(b.author)}</div></div>
+      ${status}
+      <button class="icon-btn" data-act="remove" data-id="${esc(b.id)}" title="Xoá sách" aria-label="Xoá sách ${esc(b.title)}">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </li>`;
+  }).join("") : `<li class="empty">${kw ? `Không có sách nào có chữ “${esc(kw)}” trong tên.` : "Chưa có sách. Mở mục Thêm sách bên dưới."}</li>`;
+}
 
-  // Ô chọn mượn/trả — giữ lựa chọn hiện tại khi vẽ lại
+function renderPickers() {
+  // Giữ lựa chọn hiện tại khi vẽ lại
   const keepU = $("lUser").value, keepB = $("lBook").value;
-  $("lUser").innerHTML = lib.users.map((u) => `<option value="${esc(u.id)}">${esc(u.id)} — ${esc(u.name)}</option>`).join("");
+  $("lUser").innerHTML = lib.users.map((u) => `<option value="${esc(u.id)}">${esc(u.id)}, ${esc(u.name)}</option>`).join("");
   $("lBook").innerHTML = lib.books.map((b) => {
-    const tag = b instanceof PrintedBook ? (b.isAvailable() ? "" : " (đang mượn)") : " (ebook)";
-    return `<option value="${esc(b.id)}">${esc(b.id)} — ${esc(b.title)}${tag}</option>`;
+    const tag = b instanceof PrintedBook ? (b.isAvailable() ? "" : " (đang cho mượn)") : " (ebook)";
+    return `<option value="${esc(b.id)}">${esc(b.id)}, ${esc(b.title)}${tag}</option>`;
   }).join("");
   if (lib.findUserById(keepU)) $("lUser").value = keepU;
   if (lib.findBookById(keepB)) $("lBook").value = keepB;
+}
 
-  // Thành viên
-  $("userCount").textContent = lib.users.length;
+// Phiếu mượn: mỗi BorrowRecord một dòng, mới nhất ở trên, ngày đóng dấu mực tím.
+function renderSlip() {
+  const records = [...lib.records].reverse();
+  const late = records.filter((r) => r.returnDate === null && r.isOverdue(lib.today)).length;
+  $("slipCount").textContent = `${records.length} lượt` + (late ? `, ${late} quá hạn` : "");
+  $("slip").innerHTML = records.length ? records.map((r) => {
+    const open = r.returnDate === null;
+    const overdue = open && r.isOverdue(lib.today);
+    let note = "";
+    if (overdue) note = `<div class="note"><span class="stamp late">Quá hạn · trễ ${LocalDate.daysBetween(r.dueDate, lib.today)} ngày</span></div>`;
+    else if (!open) note = `<div class="note"><span class="stamp plain${r.isOverdue(lib.today) ? " late" : ""}">Đã trả ${shortDate(r.returnDate)}${r.isOverdue(lib.today) ? ", trễ hạn" : ""}</span></div>`;
+    return `<li class="${open ? "" : "returned"}">
+      <div class="who"><b>${esc(r.book.title)}</b><span>${esc(r.user.name)}</span></div>
+      <span class="date">${shortDate(r.borrowDate)}</span>
+      <span class="date">${shortDate(r.dueDate)}</span>
+      ${note}
+    </li>`;
+  }).join("") : '<li class="slip-empty">Chưa có lượt mượn nào.</li>';
+}
+
+function renderUsers() {
+  $("userCount").textContent = `${lib.users.length} người`;
   $("users").innerHTML = lib.users.map((u) => {
     const open = u.borrowHistory.filter((r) => r.returnDate === null);
     const loans = open.map((r) => {
       const late = r.isOverdue(lib.today);
-      return `<span class="${late ? "late" : ""}">• ${esc(r.book.title)} — hạn ${LocalDate.format(r.dueDate)}${late ? " (quá hạn)" : ""}</span>`;
-    }).join("");
+      return `<span class="${late ? "late" : ""}">${esc(r.book.title)}, hạn ${LocalDate.format(r.dueDate)}${late ? " (quá hạn)" : ""}</span>`;
+    }).join("; ");
     return `<li>
-      <div class="uhead"><span><span class="name">${esc(u.name)}</span> <span class="uid">${esc(u.id)}</span></span>
-        <span class="badge ${open.length ? "type" : "ok"}">Đang mượn: ${u.getCurrentlyBorrowedCount()}</span></div>
+      <div class="uhead"><span><span class="name">${esc(u.name)}</span><span class="uid">${esc(u.id)}</span></span>
+        <span class="n">${u.getCurrentlyBorrowedCount() ? `Đang mượn ${u.getCurrentlyBorrowedCount()}` : "Không mượn sách nào"}</span></div>
       ${loans ? `<div class="loans">${loans}</div>` : ""}
     </li>`;
   }).join("") || '<li class="empty">Chưa có thành viên.</li>';
+}
 
-  // Quá hạn
-  const od = lib.getOverdueRecords();
-  $("overdueCount").textContent = od.length;
-  $("overdue").innerHTML = od.length ? od.map((r) => {
-    const days = LocalDate.daysBetween(r.dueDate, lib.today);
-    return `<li><b>${esc(r.user.name)}</b> mượn <b>${esc(r.book.title)}</b><br>
-      Hạn trả ${LocalDate.format(r.dueDate)} · <span class="days">trễ ${days} ngày</span></li>`;
-  }).join("") : '<li style="border-left-color:var(--green);background:var(--green-soft)">Không có sách quá hạn.</li>';
-
+function render() {
+  $("today").textContent = LocalDate.format(lib.today);
+  renderBooks();
+  renderPickers();
+  renderSlip();
+  renderUsers();
   save();
 }
 
@@ -595,7 +634,7 @@ $("bType").addEventListener("change", (e) => {
   $("linkField").hidden = printed;
 });
 
-$("search").addEventListener("input", render);
+$("search").addEventListener("input", renderBooks);
 
 $("bookForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -621,6 +660,15 @@ $("userForm").addEventListener("submit", (e) => {
   render();
 });
 
+// "Đặt lại dữ liệu" cần bấm 2 lần (không dùng confirm() vì bị chặn khi trang được nhúng)
+let resetTimer = null;
+function disarmReset() {
+  clearTimeout(resetTimer);
+  resetTimer = null;
+  $("resetBtn").textContent = "Đặt lại dữ liệu";
+  $("resetBtn").classList.remove("armed");
+}
+
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-act]");
   if (!btn) return;
@@ -642,7 +690,13 @@ document.addEventListener("click", (e) => {
     lib.today = LocalDate.now();
     log("Đặt lại về ngày hôm nay.", "info");
   } else if (act === "reset") {
-    if (!confirm("Xoá mọi thay đổi và nạp lại dữ liệu mẫu?")) return;
+    if (!resetTimer) {
+      btn.textContent = "Bấm lần nữa để xoá hết";
+      btn.classList.add("armed");
+      resetTimer = setTimeout(disarmReset, 3000);
+      return;
+    }
+    disarmReset();
     seed(lib); $("log").innerHTML = "";
     log("Đã nạp lại dữ liệu mẫu.", "info");
   } else if (act === "clearlog") {
