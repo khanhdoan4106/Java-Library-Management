@@ -2,57 +2,56 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản lý thư viện</title>
 <meta name="description" content="Bản demo trên trình duyệt của dự án Java Library Management: mượn/trả sách, sách giấy và ebook, theo dõi quá hạn.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Lora:wght@500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* Vật dụng thư viện: thẻ mục lục kẻ xanh có vạch đỏ, mực dấu tím, nhãn số hiệu gáy sách.
+  /* Phòng đọc thư viện: nền giấy ngả vàng, mực nâu sẫm, kệ gáy sách trên đầu trang.
+     Thẻ mục lục kẻ xanh có vạch đỏ, mực dấu tím, nhãn số hiệu gáy sách.
      Điểm nhấn duy nhất là phiếu mượn (lịch sử BorrowRecord) với ngày đóng dấu. */
   :root {
-    --page: #eef1f4;
-    --paper: #ffffff;
-    --ink: #1a2230;
-    --muted: #5a6472;
-    --rule: #dfe3e8;
-    --field: #f6f7f9;
-    --card-line: #cfe0f2;   /* dòng kẻ thẻ mục lục */
-    --card-top: #e05a5a;    /* vạch đỏ đầu thẻ */
+    color-scheme: light;
+    --page: #f4ecd6;        /* giấy cũ ngả vàng */
+    --paper: #fffcf3;
+    --ink: #2b2118;         /* mực nâu sẫm */
+    --muted: #6d604f;
+    --rule: #e2d6ba;
+    --field: #faf4e4;
+    --card-line: #cfdcea;   /* dòng kẻ thẻ mục lục */
+    --card-top: #b8382f;    /* vạch đỏ đầu thẻ */
     --stamp: #5b3ea6;       /* mực dấu tím */
-    --late: #c42b2b;
-    --term: #1a2230;
-    --term-ink: #dfe5ee;
+    --late: #b3261e;
+    --wood: #7a4e2d;        /* ván kệ */
+    --term: #2b2118;
+    --term-ink: #f1e8d4;
     --ui: "Source Sans 3", system-ui, sans-serif;
+    --serif: "Lora", Georgia, "Times New Roman", serif;
     --type: "Courier Prime", ui-monospace, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --page: #12161c;
-      --paper: #1b2028;
-      --ink: #e6eaf0;
-      --muted: #98a2b0;
-      --rule: #2c333d;
-      --field: #232a33;
-      --card-line: #283a52;
-      --card-top: #b34848;
-      --stamp: #b39cf0;
-      --late: #ff7b72;
-      --term: #0c0f13;
-    }
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   [hidden] { display: none !important; }
-  body { font-family: var(--ui); background: var(--page); color: var(--ink); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--ui); background: radial-gradient(ellipse at 50% -10%, #fbf5e4 0%, rgba(251,245,228,0) 60%), var(--page); color: var(--ink); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
   button, select, input { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 32px 24px 48px; }
 
   /* ---------------------------------------------------------- đầu trang */
   .top { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+  h1 { font-family: var(--serif); font-size: 34px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+
+  /* Kệ sách: hàng gáy sách cao thấp khác nhau đứng trên một tấm ván gỗ */
+  .shelf { display: flex; align-items: flex-end; gap: 3px; height: 64px; padding: 0 6px; margin-bottom: 22px; overflow: hidden;
+    border-bottom: 9px solid var(--wood); border-radius: 0 0 2px 2px;
+    box-shadow: 0 6px 0 -3px #5c3a21, 0 12px 18px -10px rgba(43, 33, 24, 0.45); }
+  .shelf i { flex: none; width: var(--w); height: var(--h); background: var(--c); border-radius: 2px 2px 0 0;
+    background-image: linear-gradient(to bottom, transparent 14%, rgba(255,240,200,.55) 14%, rgba(255,240,200,.55) 17%, transparent 17%, transparent 80%, rgba(255,240,200,.55) 80%, rgba(255,240,200,.55) 83%, transparent 83%),
+                      linear-gradient(to right, rgba(0,0,0,.18), rgba(255,255,255,.08) 35%, rgba(0,0,0,.12)); }
+  .shelf i.lean { transform: rotate(9deg); transform-origin: bottom left; margin-right: 12px; }
   .sub { color: var(--muted); margin-top: 4px; max-width: 36em; }
   .sub code { font-family: var(--type); font-size: 0.95em; }
   .sub a, footer a { color: inherit; text-underline-offset: 3px; }
@@ -103,7 +102,7 @@
     width: 100%; height: 38px; border: 1px solid var(--rule); background: var(--field);
     border-radius: 6px; padding: 0 10px; outline: none;
   }
-  input:hover, select:hover { border-color: #b7bfc9; }
+  input:hover, select:hover { border-color: #c4b48f; }
   input:focus, select:focus { border-color: var(--ink); background: var(--paper); }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 
@@ -113,7 +112,7 @@
   section { padding: 24px 0; border-top: 1px solid var(--rule); }
   .col > section:first-child { padding-top: 0; border-top: 0; }
   @media (max-width: 920px) { .col + .col > section:first-child { padding-top: 24px; border-top: 1px solid var(--rule); } }
-  h2 { font-size: 20px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  h2 { font-family: var(--serif); font-size: 21px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
   h2 .count { font-size: 15px; font-weight: 500; color: var(--muted); }
   h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
 
@@ -156,7 +155,7 @@
   .slip {
     background: var(--paper);
     border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(26, 34, 48, 0.08), 0 8px 24px rgba(26, 34, 48, 0.08);
+    box-shadow: 0 1px 2px rgba(43, 33, 24, 0.10), 0 8px 24px rgba(43, 33, 24, 0.12);
     padding: 14px 18px 8px;
     border-top: 3px solid var(--card-top);
   }
@@ -190,15 +189,15 @@
 
   /* ---------------------------------------------------------- console */
   .console { margin-top: 8px; border-radius: 6px; overflow: hidden; background: var(--term); }
-  .console-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: #8a96a8; }
-  .console-head button { background: none; border: 0; color: #8a96a8; cursor: pointer; font-size: 13px; }
+  .console-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: #b9a98c; }
+  .console-head button { background: none; border: 0; color: #b9a98c; cursor: pointer; font-size: 13px; }
   .console-head button:hover { color: var(--term-ink); text-decoration: underline; }
   .term { color: var(--term-ink); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.65; padding: 8px 14px 12px; height: 200px; overflow-y: auto; }
   .term .ln { white-space: pre-wrap; word-break: break-word; }
-  .term .d { color: #6f7b8d; }
-  .term .ok { color: #9fd8b0; }
+  .term .d { color: #9a8a70; }
+  .term .ok { color: #b5dba0; }
   .term .err { color: #ffa198; }
-  .term .info { color: #c9b8ff; }
+  .term .info { color: #f0c87a; }
 
   footer { margin-top: 32px; color: var(--muted); font-size: 14.5px; }
 
@@ -213,6 +212,7 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="shelf" id="shelf" aria-hidden="true"></div>
   <header class="top">
     <div>
       <h1>Quản lý thư viện</h1>
@@ -704,6 +704,18 @@ document.addEventListener("click", (e) => {
   }
   render();
 });
+
+// Kệ sách trang trí: màu bìa da, chiều cao và độ dày cố định theo hạt giống để lần nào cũng như nhau
+(function buildShelf() {
+  const covers = ["#7a2e2a", "#2f5d50", "#24395c", "#c9962b", "#a8763e", "#5b3a5e", "#8c3b22", "#3e4f2a", "#1f4a63", "#b4552d"];
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const shelf = $("shelf"); let html = "";
+  for (let i = 0; i < 64; i++) {
+    const w = 14 + Math.round(rnd() * 14), h = 38 + Math.round(rnd() * 24), c = covers[Math.floor(rnd() * covers.length)];
+    html += `<i${i % 17 === 11 ? ' class="lean"' : ""} style="--w:${w}px;--h:${h}px;--c:${c}"></i>`;
+  }
+  shelf.innerHTML = html;
+})();
 
 // Khởi động
 let loaded = false;
